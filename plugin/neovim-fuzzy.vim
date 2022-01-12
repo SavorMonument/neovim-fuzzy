@@ -37,12 +37,8 @@ if !exists("g:fuzzy_rootcmds")
   \ ]
 endif
 
-if !exists("g:fuzzy_hidden")
-  let g:fuzzy_hidden = 0
-endif
-
-if !exists("g:fuzzy_ignore_vcs")
-  let g:fuzzy_ignore_vcs = 1
+if !exists("g:fuzzy_rg_args")
+  let g:fuzzy_rg_args = []
 endif
 
 let g:fuzzy_splitcmd_map = {
@@ -103,8 +99,6 @@ let s:ag = { 'path': 'ag' }
 function! s:ag.find(root) dict
   return systemlist(
         \[s:ag.path, "--silent", "--nocolor", "-g", "", "-Q"] +
-        \(g:fuzzy_hidden ? ["--hidden"] : []) +
-        \(g:fuzzy_ignore_vcs ? [] : ["--skip-vcs-ignores"]) +
         \(empty(a:root) ? [] : [a:root]))
 endfunction
 
@@ -112,8 +106,6 @@ function! s:ag.find_contents(query) dict
   let query = empty(a:query) ? '^(?=.)' : shellescape(a:query)
   return systemlist(
         \[s:ag.path, "--noheading", "--nogroup", "--nocolor",  "-S", query] +
-        \(g:fuzzy_hidden ? ["--hidden"] : []) +
-        \(g:fuzzy_ignore_vcs ? [] : ["--skip-vcs-ignores"]))
 endfunction
 
 "
@@ -122,10 +114,12 @@ endfunction
 let s:rg = { 'path': 'rg' }
 
 function! s:rg.find(root) dict
+  " echom [s:rg.path, "--color", "never", "--files", "--fixed-strings"] +
+  "       \g:fuzzy_rg_args +
+  "       \(empty(a:root) ? [] : [a:root])
   return systemlist(
         \[s:rg.path, "--color", "never", "--files", "--fixed-strings"] +
-        \(g:fuzzy_hidden ? ["--hidden"] : []) +
-        \(g:fuzzy_ignore_vcs ? [] : ["--no-ignore-vcs"]) +
+        \g:fuzzy_rg_args +
         \(empty(a:root) ? [] : [a:root]))
 endfunction
 
@@ -133,8 +127,7 @@ function! s:rg.find_contents(query) dict
   let query = empty(a:query) ? '.' : shellescape(a:query)
   return systemlist(
         \[s:rg.path, "-n", "--no-heading", "--color", "never", "-S", query] +
-        \(g:fuzzy_hidden ? ["--hidden"] : []) +
-        \(g:fuzzy_ignore_vcs ? [] : ["--no-ignore-vcs"]))
+        \g:fuzzy_rg_args)
 endfunction
 
 " Set the finder based on available binaries.
